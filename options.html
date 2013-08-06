@@ -1,0 +1,100 @@
+<html>
+  <head>
+    <title>Browsershark Options</title>
+	<link rel="stylesheet" href="default.css">
+	<link type="text/css" rel="stylesheet" href="jquery.dropdown.css" />
+	<script type="text/javascript" src="jquery.min.js"></script>
+	<script type="text/javascript" src="jquery.dropdown.js"></script>
+	<script type="text/javascript" src="options.js"></script>
+	</head>
+	<body>
+        <div id="header">
+			<h1>Browsershark</h1>
+		</div>
+		<div id="content">
+			<nav>
+				<ul id="appleNav">
+					<li><a href="menu.html" title="Results">Results</a></li>
+					<li><a href="options.html" title="Settings">Settings</a></li>
+					<li><a href="help.html" title="Help">Help</a></li>
+				</ul>
+			</nav>
+		</div>
+		<div class="sidebar">
+			<h2 id="clear" class="sideButton">Clear</h2>
+			<h2 id="pause" class="sideButton">Pause</h2>
+		</div>
+		<div class="main">
+			<h2 style="border-bottom: solid 2px #DDD;">Settings</h2>
+			<div id="opts" style="margin-left:10px;margin-top:8px;line-height:2;" >
+				<p>Media Replay is currently limiting to <span id="limitBox" class="spandrop" data-dropdown="#limit"></span> requests at a time.</p>
+				<p>You are currently filtering on <span id="filterBox0" class="spandrop" data-dropdown="#filter0"></span><span id="ext"> and <span class="spanadd" id="addNew">...+</span></span></p>
+				<p>Currently using the following url filters:</p>
+			</div>
+			<div id="info" style="position:absolute;left:40%;width:60%;top:41px;text-align:right;margin-left:-17px;line-height:2;">
+				<p>More requests take up more memory and can slow down your browser.</p>
+				<p>Filter based on content-type to make it easier to sort through the logs.</p>
+				
+				<div class="filterTest">
+					<table class="simpleTable">
+						<tbody>
+							<tr>
+								<th>Pattern</th>
+								<th>What it does</th>
+								<th>Matching URLS</th>
+							</tr>
+							<tr>
+								<td><code>http://*/*</code></td>
+								<td>Matches any URL that uses the <code>http</code> scheme</td>
+								<td>http://www.google.com/</br>http://example.org/foo/bar.html</td>
+							</tr>
+							<tr>
+								<td><code>https://*.google.com/foo*bar</code></td>
+								<td>Matches any URL that uses the <code>https</code> scheme, is on a google.com host, as long as the path starts with <code>/foo</code> and ends with <code>bar</code></td>
+								<td>https://www.google.com/foo/baz/bar</br>https://docs.google.com/foobar</td>
+							</tr>
+						</tbody>
+					</table>
+				
+					<p></br>
+						<table class="simpleTable">
+							<tbody>
+								<tr>
+									<th>Test Filter</th>
+									<th>Match</th>
+									<th>Status</th>
+								</tr>
+								<tr>
+									<td><input type="text" value="Test a url filter..." id="testFilter" class="testBox"></td>
+									<td><input type="text" value="To match this url..." id="testUrl" class="testBox"></td>
+									<td><div class="status-box-success" id="status-box"></div></td>
+								</tr>
+							</tbody>
+						</table>
+					</p>
+				</div>
+			</div>
+		</div>
+		<div id="limit" class="dropdown dropdown-tip limit">
+			<ul class="dropdown-menu">
+				<li><a href="#">50</a></li>
+				<li><a href="#">100</a></li>
+				<li><a href="#">500</a></li>
+				<li><a href="#">1000</a></li>
+				<li><a href="#">1500</a></li>
+				<li><a href="#">2500</a></li>
+			</ul>
+		</div>
+
+		<div id="filter0" class="dropdown dropdown-tip filter">
+			<ul class="dropdown-menu">
+				<li><a href="#">All</a></li>
+				<li><a href="#">Audio</a></li>
+				<li><a href="#">Images</a></li>
+				<li><a href="#">Text</a></li>
+				<li><a href="#">Video</a></li>
+				<li><a href="#">Other</a></li>
+			</ul>
+		</div>
+	</body>
+</html>

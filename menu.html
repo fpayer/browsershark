@@ -1,0 +1,49 @@
+<html>
+  <head>
+    <title>Browsershark Menu</title>
+	<link rel="stylesheet" href="default.css">
+	<link rel="stylesheet" href="menu.css">
+    <script src="jquery.min.js"></script>
+    <script src="jdataview.js"></script>
+	<script src="menu.js"></script>
+    <script src="jquery.tablesorter.min.js"></script>
+	</head>
+	<body>
+	<div class="filler">
+		<div id="header">
+			<h1>Browsershark</h1>
+		</div>
+		<div id="content">
+			<nav>
+				<ul id="appleNav">
+					<li><a href="menu.html" title="Results">Results</a></li>
+					<li><a href="options.html" title="Settings">Settings</a></li>
+					<li><a href="help.html" title="Help">Help</a></li>
+				</ul>
+			</nav>
+		</div>
+		<div class="sidebar">
+			<h2 id="clear" class="sideButton">Clear</h2>
+			<h2 id="pause" class="sideButton">Pause</h2>
+		</div>
+        <div style="display: none" class="selectbar">
+            <h2 id="analyze" class="sideButton">Analyze</h2>
+            <h2 id="download" class="sideButton">Download</h2>
+        </div>
+		<div align="center" id="results">
+			<table id="table" class="tablesorter">
+				<thead>
+					<th>Protocol&nbsp;</th><th>Host</th><th>Resource</th><th>Content-Type</th><th>Select</th>
+				</thead>
+				<tbody>
+				</tbody>
+			</table>
+			<div class="button" style="margin-top:60px" align="center" hidden=true>
+			  <a href="#">Download</a>
+			  <p class="top">Click to begin</p>
+			  <p class="bottom"></p>
+			</div>
+		</div>
+	</div>
+  </body>
+</html>

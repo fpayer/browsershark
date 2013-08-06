@@ -1,0 +1,470 @@
+﻿	/* Fade in animation (Webkit only) */
+	@-webkit-keyframes showMenu {
+		from { opacity: 0; top:-20px; }
+		to   { opacity: 1; }
+	}
+	
+	@-webkit-keyframes showSidebar {
+		from { opacity: 0; right:-40px; }
+		to   { opacity: 1; }
+	}
+
+	body {
+		font-family:helvetica, arial, sans-serif;
+		font-size:80%;
+		margin:10px;
+        height: 90%;
+		background: #eeeeee url("background.png") 0 0 repeat-x;
+    }
+
+   	#header {
+		margin: 10px;
+		padding-bottom:1.5em;
+		padding-top:1.5em;
+	}
+	
+	/* filter test */
+	
+	.filterTest {
+		position: absolute;
+		text-align: left;
+		padding-top: 30px;
+		right: 0;
+	}
+	
+	/* Table */
+	.simpleTable {
+		padding: 0;
+	}
+	
+	.simpleTable th, .simpleTable td {
+		vertical-align: top;
+		border-collapse: seperate;
+		border-style: none;
+		padding: 2px;
+	}
+	
+	.simpleTable th {
+		text-align: left;
+		margin-left:0;
+		padding-left:0;
+	}
+	
+	code {
+		font-family: monospace;
+		color: #080;
+	}
+	
+	/* header */
+	
+	#header h1 {
+		font-size: 156%;
+		display:inline;
+		padding-bottom:43px;
+		padding-left:75px;
+		padding-top:40px;
+		background:url(replay.png) no-repeat;
+		background-size:67px;
+		background-position:1px 18px;
+	}
+	
+	.main {
+		position:relative;
+		left:10%;
+		top:15px;
+		border-radius:5px;
+		-webkit-box-shadow: 1px 1px 1px rgba(0,0,0,.3);
+		border:1px solid #e2e2e2;
+		width:80%;
+		background:#eeeeee;
+		min-height:404px;
+		padding:8px;
+	}
+	
+    .selectbar {
+	    position: fixed;
+		top: 155px;
+		right: 20px;
+		width: 7%;
+		background: red;
+		border-color:#e2e2e2;
+		border-style:solid;
+		border-width:5px;
+		-webkit-box-shadow:1px 1px 1px rgba(0,0,0,.3);
+		-webkit-border-radius: 5px;
+		-webkit-animation: showSidebar 1s; position:fixed;
+    }
+
+	.selectbar h2 {
+		color: #2EA5FD;
+		font-size:14px;
+		font-family:"Lucida Grande","Lucida Sans Unicode",Helvetica,Arial,Verdana,sans-serif;
+		text-align:center;
+		background-color: #5E5E5E;
+		padding: 2px 0px 3px 5px; 
+     }
+	 
+	.selectbar h2:hover {
+		cursor: pointer;
+	}
+
+	.sidebar{
+		position: fixed;
+		top: 85px;
+		right: 20px;
+		width: 7%;
+		background: red;
+		border-color:#e2e2e2;
+		border-style:solid;
+		border-width:5px;
+		-webkit-box-shadow:1px 1px 1px rgba(0,0,0,.3);
+		-webkit-border-radius: 5px;
+		-webkit-animation: showSidebar 1s; position:fixed;
+	}
+
+	.sidebar h2 {
+		color: #2EA5FD;
+		font-size:14px;
+		font-family:"Lucida Grande","Lucida Sans Unicode",Helvetica,Arial,Verdana,sans-serif;
+		text-align:center;
+		background-color: #5E5E5E;
+		padding: 2px 0px 3px 5px; 
+     }
+	 
+	.sidebar h2:hover {
+		cursor: pointer;
+	}
+
+    .section-header {
+        background:#ebeff9;
+        border-top:1px solid #b5c7de;
+        font-size:99%;
+        padding:3px 0 2px 5px;
+        font-weight:bold;
+        margin-bottom:1em;
+        margin-top:4em;
+		
+    }
+ 
+    .section-header.first {
+         margin-top:1em;
+    }
+	
+	.spanadd {
+		color :#08C;
+		cursor: pointer;
+		padding: 4px;
+		border-radius: 4px;
+	}
+	
+	.spanadd:hover {
+		background: #F2F2F2;
+	}
+	.niceBoxContainer {
+		padding: 5px;
+	}
+	/* Statusbox */
+	
+	.status-box-success, .status-box-fail {
+        padding: 20px;
+        background-repeat: no-repeat;
+		margin-top: -3px;
+		margin-left: 10px;
+    }
+
+    .status-box-success {
+        background-image:url('success.png')
+    }
+
+    .status-box-fail {
+        background-image:url('fail.png')
+    }
+	
+	/* Nicebox*/
+	.niceBox, .testBox {
+		border: 1px solid;
+		border-radius: 5px;
+		width: 25%;
+		min-width: 225px;
+		color: #666;
+		padding: 5px 10px;
+		margin-right: 5px;
+		outline:none;
+	}
+	
+	.niceBox:focus, .testBox:focus{
+		border: 1px solid #2EA5FD;
+		box-shadow: 0 0 5px 3px #2EA5FD;
+	}
+
+	/* delete button */
+	.delete {
+		position: absolute;
+		margin-top: 5px;
+		margin-left: 6px;
+		height: 14px;
+		width: 14px;
+		background: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAA4AAAAOCAYAAAAfSC3RAAAABHNCSVQICAgIfAhkiAAAAAlwSFlzAAALEgAACxIB0t1+/AAAABx0RVh0U29mdHdhcmUAQWRvYmUgRmlyZXdvcmtzIENTM5jWRgMAAAAVdEVYdENyZWF0aW9uIFRpbWUAMTcvNS8wOIso0VsAAAIRSURBVCiRXZK/a1NRFMc/9713bUJTa0qHONQfhdLaRacODS7+AR1qpxJw0MX/QFwemV0EBXF0cOli5jgKGTIINkWKlEohYEsDEUMbk3fOPS55oXjgTOd8Dp97+Tr+qzRNZwAPxIADBMjq9fpoMofJIAeuAQXv/VPgYQjhQQghUtVvqvolSZIPzrk/wGgKpmlaiKLoXhzHb8ysGkJAVQkhYGaoKqr61Tn3vFgsdoChS9M0ds7dieP4cwjhrqoiIqgqZjbtybFf3vtHs7OzRxEwA7xQ1btZlrG6usrKygrj8Zgsy1hYWKBarebgzeFwWAdmEjO7EUKohRAQEcrlMhsbGwyHQ87Pz6nVahwfH08tVPXxYDB4mYjIOlDIFZvNJlEUsbOzw+XlJWdnZzQajau68cXFxf1IVa/n1/LPODg4II5j5ubm2N/fR0SugohIOTGzrohMoUqlwu7uLp1Oh8PDQ7a3twFot9tT3SRJTpJisfij3++fmNltM2Nzc5Nut0uj0UBV8d6ztrZGq9XKwd78/Pz3BPhrZm9F5JWZsbe3RxzHU712u02r1SLLMkSEKIrelUqlfh6A0unp6UdV3TKzafzyd4kIIgLQXF5ernnve9FkZ7S4uPjMzF5nWTYej8eMRqNpi4g6594vLS098d7/BuxqViOg0Ov1bg0Ggy1VXTcznHNHpVLpU6VS+TnJqQL8AzaYdA0PjF7GAAAAAElFTkSuQmCC);
+	}
+	
+	.delete:hover {
+		cursor: pointer;
+	}
+
+    /* tooltip */
+    span.tooltip {
+        outline:none; 
+    }
+    span.tooltip strong {
+        line-height:30px;
+    }
+    span.tooltip span {
+        z-index:10;
+        display:none; 
+        padding:14px 20px;
+        margin-top:30px; 
+        margin-left:-160px;
+        width:240px; 
+        line-height:16px;
+        border-radius:2px;
+        -webkit-border-radius: 2px;
+        box-shadow: 0px 0px 8px 4px #666;
+        -webkit-box-shadow: 0px 0px 8px 4px #666;
+        opacity: 0.95;
+        color: #800;
+    }
+    span.tooltip:hover {
+        cursor: default;
+    }
+    span.tooltip:hover span{
+        display:inline; 
+        position:absolute; 
+        border:2px solid #FFF;  
+        color:#EEE;
+        background:#000 url(tooltip.png) 
+        repeat-x 0 0;
+    }
+    .callout {
+        z-index:20;
+        position:absolute;
+        border:0;
+        top:-14px;
+        left:120px;
+    }
+    /* hex print */
+
+    .hexprint {
+        overflow: visible;
+    }
+
+    /* prettyprint */
+
+    .prettyprint {
+        border-color: #36C;
+        border-top: 1px solid;
+        border-bottom: 1px solid;
+        font-size: 10pt;
+        overflow: visible;
+        word-wrap: break-word;
+        position: relative;
+        font-family: monospace;
+    }
+
+    .prettyprint .pln {
+        color: #000;
+    }
+
+    .prettyprint .type {
+        color: #080;
+        font-weight: bold;
+    }
+
+	/*spandropdown*/
+	
+	.spandrop {
+		color: #08C;
+		cursor: pointer;
+		padding: 4px;
+		border-radius: 4px;
+	}
+	
+	.spandrop:hover {
+		background: #F2F2F2;
+	}
+	
+	.spandrop.dropdown-open {
+		background: #888;
+		color: #FFF;
+	}
+	
+	.spandrop.dropdown-open:after{
+		color: #FFF;
+	}
+
+	.spandrop:after {
+		content: '↓';
+		margin-left: 6px;
+		color: #08C;
+	}
+	
+	
+	/* tablesort */
+	.tablesorter-default th,
+	.tablesorter-default thead td {
+		font: bold 12px/18px Arial, Sans-serif;
+		color: #000;
+		background-color: #fff;
+		border-collapse: collapse;
+		border-bottom: #ccc 2px solid;
+		padding: 0;
+	}
+	.tablesorter-default tfoot th,
+	.tablesorter-default tfoot td {
+		border: 0;
+	}
+	.tablesorter-default .header,
+	.tablesorter-default .tablesorter-header {
+		background-image: url(data:image/gif;base64,R0lGODlhFQAJAIAAACMtMP///yH5BAEAAAEALAAAAAAVAAkAAAIXjI+AywnaYnhUMoqt3gZXPmVg94yJVQAAOw==);
+		background-position: center right;
+		background-repeat: no-repeat;
+		cursor: pointer;
+		white-space: normal;
+		padding: 4px 20px 4px 4px;
+	}
+	.tablesorter-default thead .headerSortUp,
+	.tablesorter-default thead .tablesorter-headerSortUp,
+	.tablesorter-default thead .tablesorter-headerAsc {
+		background-image: url(data:image/gif;base64,R0lGODlhFQAEAIAAACMtMP///yH5BAEAAAEALAAAAAAVAAQAAAINjI8Bya2wnINUMopZAQA7);
+		border-bottom: #000 2px solid;
+	}
+	.tablesorter-default thead .headerSortDown,
+	.tablesorter-default thead .tablesorter-headerSortDown,
+	.tablesorter-default thead .tablesorter-headerDesc {
+		background-image: url(data:image/gif;base64,R0lGODlhFQAEAIAAACMtMP///yH5BAEAAAEALAAAAAAVAAQAAAINjB+gC+jP2ptn0WskLQA7);
+		border-bottom: #000 2px solid;
+	}
+	.tablesorter-default thead .sorter-false {
+		background-image: none;
+		padding: 4px;
+	}
+	
+	/* hovered row colors */
+	.tablesorter-default tbody > tr:hover > td,
+	.tablesorter-default tbody > tr.even:hover > td,
+	.tablesorter-default tbody > tr.odd:hover > td {
+		background: #fff;
+		color: #000;
+	}
+
+
+	/* APPLE
+	
+	*/
+	
+	/* BASIC RESET */
+	ul,ol,li,h1,h2,h3,h4,h5,h6,pre,form,body,html,p,blockquote,fieldset,input{margin:0; padding:0;}
+	
+	/* HTML ELEMENTS */
+	h1 { font-family:"Lucida Grande","Lucida Sans Unicode",Helvetica,Arial,Verdana,sans-serif; text-align: center; color: #000; font-size:60px; letter-spacing:-1px; }
+	h1 small{ font-size: 24px; display: block; color: #636363; }
+
+	/* COMMON CLASSES */
+	.break { clear:both; }
+
+	/* WRAPPER */
+	#wrapper { width:980px; margin:40px auto; }
+
+	/* CONTENT */
+	#content { margin-top:-50px; }
+	#content p { font: 14px "Lucida Grande","Lucida Sans Unicode",Helvetica,Arial,Verdana,sans-serif; color:#333333; line-height:18px; margin:15px auto; width:800px; }
+	#content p a { color:#0088CC; text-decoration:none; }
+	#content p a:hover { text-decoration:underline; }
+	
+	#appleLabel li { display:block; float:left; border-right:1px solid #5d5d5d; border-left:1px solid #929292; width:105px; height:34px; border-bottom:1px solid #575757; border-top:1px solid #797979;
+
+		/* Gradient backgrounds for the buttons. Generated using http://gradients.glrzad.com/ */
+		background-image: -webkit-gradient(linear, left bottom, left top, color-stop(0, #787878), color-stop(0.5, #5E5E5E), color-stop(0.51, #707070), color-stop(1, #838383));
+		background-color:#5f5f5f; /* Fallback */
+	} 
+	
+	#appleLabel li:active {
+		background-image: -webkit-gradient(linear, left bottom, left top, color-stop(0, #3F3F3F), color-stop(0.5, #383838), color-stop(0.51, #434343), color-stop(1, #555555));
+		background-color:#383838; /* Fallback */
+		
+		-webkit-box-shadow: inset 0 1px 2px 2px #000;
+		box-shadow: inset 0 1px 2px 2px #000;
+	}
+	
+	/* APPLE STYLE NAVIGATION MENU */
+	#appleNav { margin:5px 0; list-style:none;
+		margin-left:auto;
+		margin-right:auto;
+		
+		/* Lucinda Grande is the font used on the website from Apple. */
+		font-family: "Lucida Sans Unicode", "Lucida Grande", Verdana, Arial, Helvetica, sans-serif; letter-spacing:-0.5px; font-size:13px;
+		
+		/* Apply a subtle text-shadow to the text */
+		text-shadow: 0 -1px 3px #202020;
+
+		/* We want to add the shadow to the complete navigation menu. In order to do that, we'll need to set
+		the correct width and height, and also the correct borders, in order to create the perfect drop shadow */
+		/* width:748px; height:34px; */
+		width:319px; height:34px;
+		
+		-webkit-border-radius:4px;
+		border-radius:4px;
+		
+		-webkit-box-shadow: 0px 3px 3px #cecece;
+		box-shadow: 0 3px 4px #8b8b8b;
+	}
+
+	#appleNav li { display:block; float:left; border-right:1px solid #5d5d5d; border-left:1px solid #929292; width:105px; height:34px; border-bottom:1px solid #575757; border-top:1px solid #797979;
+
+		/* Gradient backgrounds for the buttons. Generated using http://gradients.glrzad.com/ */
+		background-image: -webkit-gradient(linear, left bottom, left top, color-stop(0, #787878), color-stop(0.5, #5E5E5E), color-stop(0.51, #707070), color-stop(1, #838383));
+		background-color:#5f5f5f; /* Fallback */
+	}
+
+	/* Set the states when hovering*/
+	#appleNav li:hover {
+		background-image: -webkit-gradient(linear, left bottom, left top, color-stop(0, #3F3F3F), color-stop(0.5, #383838), color-stop(0.51, #434343), color-stop(1, #555555));
+		background-color:#383838; /* Fallback */
+		
+		/* We use the inset of the box shadow to create a subtle inner glow when hovering */
+		-webkit-box-shadow: inset 0 0 5px 5px #535353;
+		box-shadow: inset 0 0 5px 5px #535353;
+	}
+
+	/* When the user clicks the button, we simply change the box inset (compared to the "hover") */
+	#appleNav li:active {
+		background-image: -webkit-gradient(linear, left bottom, left top, color-stop(0, #3F3F3F), color-stop(0.5, #383838), color-stop(0.51, #434343), color-stop(1, #555555));
+		background-color:#383838; /* Fallback */
+		
+		-webkit-box-shadow: inset 0 1px 2px 2px #000;
+		box-shadow: inset 0 1px 2px 2px #000;
+	}
+
+	#appleNav li a { color:white; text-decoration:none; text-align:center; display:block; line-height:34px; outline:none; }
+
+	/* Rounded corner for the first in last item. Shorthand: Top left, Top right, Bottom right, Bottom left.
+	We also remove the borders, since they don't need them. */
+	#appleNav li:first-child {
+		-webkit-border-radius:4px 0 0 4px;
+		border-radius:4px 0 0 4px;
+		
+		border-left:none;
+	}
+	
+	/* Rounded corner for the last in last item. Shorthand: Top left, Top right, Bottom right, Bottom left.
+	We also remove the borders, since they don't need them. */
+	#appleNav li:last-child {
+		-webkit-border-radius:0 4px 4px 0;
+		border-radius:0 4px 4px 0;
+		
+		border-right:none;
+	}
+
+
+	#appleNav {
+		 -webkit-animation: showMenu 1s; position:relative;
+	}
