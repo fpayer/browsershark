@@ -9,13 +9,13 @@ if (!localStorage.isInitialized)
 	localStorage.webs = "[]";
 	//localStorage.paused = false;
 	var notif = webkitNotifications.createNotification(
-		"http://cyberexplo.it/static/img/icon.png",  // icon url - can be relative
+		"/images/icon.png",  // icon url - can be relative
 		'Welcome to Browsershark.',  // notification title
 		'Click here to run the initial config.'  // notification body text
 	);
-	notif.onclick = function() { chrome.tabs.create({url : "options.html"}); notif.cancel();};
+	notif.onclick = function() { chrome.tabs.create({url : "/html/options.html"}); notif.cancel();};
 	notif.show();
-	chrome.tabs.create({url:"help.html"});
+	chrome.tabs.create({url:"/html/menu.html"});
 }
 /*
 if(localStorage.version != VERSION)
@@ -180,10 +180,10 @@ chrome.webRequest.onBeforeSendHeaders.addListener(
 );
 
 chrome.browserAction.onClicked.addListener(function(){
-    chrome.tabs.create({url : "menu.html"});
+    chrome.tabs.create({url : "/html/menu.html"});
 });
 
 function openHelp()
 {
-	chrome.tabs.create({url: "help.html"});
+	chrome.tabs.create({url: "/html/help.html"});
 }

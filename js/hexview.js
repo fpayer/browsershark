@@ -137,7 +137,7 @@ var addHex = function(file, bytes, meta){
 
                 var tooltip = $("<span>");
                 var img = $("<img>");
-                img.attr("src", "callout.gif");
+                img.attr("src", "/images/callout.gif");
                 img.addClass("callout");
                 tooltip.html("<strong>"+meta[y][2]+"</strong></br>"+meta[y][3]);
                 

@@ -14,7 +14,7 @@
 		font-size:80%;
 		margin:10px;
         height: 90%;
-		background: #eeeeee url("background.png") 0 0 repeat-x;
+		background: #eeeeee url("/images/background.png") 0 0 repeat-x;
     }
 
    	#header {
@@ -63,7 +63,7 @@
 		padding-bottom:43px;
 		padding-left:75px;
 		padding-top:40px;
-		background:url(replay.png) no-repeat;
+		background:url(/images/replay.png) no-repeat;
 		background-size:67px;
 		background-position:1px 18px;
 	}
@@ -173,11 +173,11 @@
     }
 
     .status-box-success {
-        background-image:url('success.png')
+        background-image:url('/images/success.png')
     }
 
     .status-box-fail {
-        background-image:url('fail.png')
+        background-image:url('/images/fail.png')
     }
 	
 	/* Nicebox*/
@@ -241,7 +241,7 @@
         position:absolute; 
         border:2px solid #FFF;  
         color:#EEE;
-        background:#000 url(tooltip.png) 
+        background:#000 url(/images/tooltip.png) 
         repeat-x 0 0;
     }
     .callout {
