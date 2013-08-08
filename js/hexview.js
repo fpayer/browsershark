@@ -1,5 +1,7 @@
 var items = JSON.parse(localStorage.hexview);
 var view;
+var progress = [];
+var max = 1000;
 
 window.addEventListener("load", function(){
     $("#clear").on("click", function(){
@@ -19,7 +21,6 @@ window.addEventListener("load", function(){
         $("#pause").text("Resume");
     }
 }); 
-
 
 var toHex = function(arr){
     var result = "";
@@ -42,6 +43,12 @@ var readField = function(bytes, start, stop){
 
 //Meta
 //[512,516,"FDFFFFFF", "MS Office file"]
+
+var getMeta = function(bytes){
+	meta = [];
+	meta = checkFiletype(bytes, meta);
+	return meta;
+}
 
 var checkFiletype = function(bytes, meta){
     //In HEX
@@ -81,8 +88,8 @@ var checkFiletype = function(bytes, meta){
     ];
     
     for(var x =0;x<fileTypes.length;x++){
-        console.log("This field is:", readField(bytes, 0, 20));
-		console.log("This field is:", view.getString(20, 0));
+        //console.log("This field is:", readField(bytes, 0, 20));
+		//console.log("This field is:", view.getString(20, 0));
         if (checkConstant(bytes, fileTypes[x][0], fileTypes[x][1], fileTypes[x][2])){
             meta.push([fileTypes[x][0], fileTypes[x][1], "Content-Type: " + fileTypes[x][3], "Filetype determined with presence of the signature: <b>" + fileTypes[x][2] + "</b>"]);
         }
@@ -90,20 +97,28 @@ var checkFiletype = function(bytes, meta){
     return meta;
 }
 
-var addHex = function(file, bytes, meta){
-    var parentdiv = $("<div>");
-    parentdiv.addClass("hexprint");
-    var h3 = $("<h3>");
-    h3.text(file.host + " | " + file.name);
-    var hexdiv = $("<div>");
-    hexdiv.addClass("prettyprint");
-    
-    //meta = [start, end, value]
-    //meta = [[3, 6, "Test"]];
+var addHex = function(id){
+	//Retrieve bytes
+	var data = progress[id].data;
+	var offset = progress[id].offset;
+	var completed = progress[id].completed;
 
+	var bytes = getBytes(data, offset, max);
+	
+	progress[id] = {
+		"data" : data,
+		"offset" : offset+max,
+		"completed" : offset+max>data.length ? true : false,
+	}
+	
+	//Retrieve parent div and content div
+    var parentdiv = $("#"+id);
+    var hexdiv = $(".prettyprint").eq(id);
+	
+	//Retrieve meta
+	meta = getMeta(bytes);
 
-    console.log(meta);
-
+	//Create hexdump
     var plain = $("<span>").addClass("pln");
     var type = $("<span>").addClass("type tooltip");
     var flag = false;
@@ -158,12 +173,40 @@ var addHex = function(file, bytes, meta){
         }
     }
     hexdiv.append(plain);
-    
-    var spacer = $("<p>");
-    spacer.html("</br>");
+	
+	//Create more button
+	parentdiv.find(".spanadd").remove();
+	if(!progress[id]["completed"])
+	{
+		parentdiv.find(".spanadd").remove();
+		var more = $("<span>");
+		more.data("cb", id);
+		more.addClass("spanadd");
+		more.on("click", function(){
+			var span = $(this);
+			var id = span.data("cb");
+			addHex(id);
+		});	
+		more.text(".....More");
+		hexdiv.append(more);
+	}
+}
 
-    parentdiv.append(h3).append(hexdiv).append(spacer);
-    $("#view").append(parentdiv);
+var getBytes = function(data, offset, length){
+	data = data.substring(offset, offset+length);
+	length = length>data.length ? data.length : length;
+	view = new jDataView(data);
+	var bytes = "";
+	for (var byteCount = 0; byteCount < length; byteCount++){
+        //bits += view.getBytes(1, byteCount)[0].toString(2);
+        Byte = toHex(view.getBytes(1,byteCount));
+        if (Byte.length == 1){
+            Byte = "0" + Byte;
+        }
+        bytes += Byte;
+    }
+    bytes = bytes.toUpperCase();
+	return bytes;
 }
 
 for (var x=0; x<items.length;x++){
@@ -175,41 +218,45 @@ for (var x=0; x<items.length;x++){
 			xhr.responseType = "arraybuffer";
 	  }
     }).done(function(data){
-		var max = 1000;
-		
-		data = data.substring(0,max);
-        view = new jDataView(data);
-        var length = view.byteLength;
-
-        if (length > max){
-            length = max;
-        }
-
-        var bytes = "";
-        //var bits = "";
-
-        for (var byteCount = 0; byteCount < length; byteCount++){
-            //bits += view.getBytes(1, byteCount)[0].toString(2);
-            Byte = toHex(view.getBytes(1,byteCount));
-            if (Byte.length == 1){
-                Byte = "0" + Byte;
-            }
-            bytes += Byte;
-        }
-        bytes = bytes.toUpperCase();
-        var meta = [ ];
-		try {
-			meta = checkFiletype(bytes, meta);
-		} catch(err){}
+		//Figure out our matching file
+		var file;
 		for (var x =0; x<items.length;x++){
 			if(items[x].url == this.url){
-				addHex(items[x], bytes, meta);
-				return;
+				file = items[x];
 			}
 		}
-        /*
-		item = items[$(".hexprint").length];
-        addHex(item, bytes, meta);
-		*/
+		
+		//Add to status
+		progress.push({
+			"offset" : 0,
+			"completed" : false,
+			"data" : data
+		});
+		var id = progress.length-1;
+		
+		//Generate parent div
+		var parentdiv = $("<div>");
+		parentdiv.addClass("hexprint");
+		parentdiv.attr("id", id);
+		
+		//Generate header
+		var h3 = $("<h3>");
+		h3.text(file.host + " | " + file.name);
+		
+		//Generate hex
+		var hexdiv = $("<div>");
+		hexdiv.addClass("prettyprint");
+		
+		//Append header to parent
+		parentdiv.append(h3);
+		
+		//Append hex to parent
+		parentdiv.append(hexdiv);
+		
+		//Append parent to document
+		$("#view").append(parentdiv);
+	
+		//Append content 
+		addHex(id);
     });
 }

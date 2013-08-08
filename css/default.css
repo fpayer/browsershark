@@ -255,6 +255,7 @@
 
     .hexprint {
         overflow: visible;
+		margin-bottom: 26px;
     }
 
     /* prettyprint */
