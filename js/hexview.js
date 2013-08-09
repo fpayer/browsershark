@@ -232,11 +232,20 @@ var checkHeaders = function(data, meta){
 					crc = toHex(reader.getBytes(4, offset));
 					meta.push([offset, offset+3, "CRC: " + crc, "The CRC or Cyclic Redundancy Check for this header is " + crc, "png"]);
 					offset+=4;
+				},
+				"sBIT" : function(data, meta){
+					var sBit;
+				
+					sBit = reader.getInt32(headerLength);
+					meta.push([offset, offset+headerLength-1, "sBit value: " + sBit, "This means that " + sBit + " bits were significant in the source data", "png"]);
+					offset+=headerLength;
+					
+					crc = toHex(reader.getBytes(4, offset));
+					meta.push([offset, offset+3, "CRC: " + crc, "The CRC or Cyclic Redundancy Check for this header is " + crc, "png"]);
+					offset+=4;
 				}
 			}
-			
 			offset = 33;
-			
 			while(true) 
 			{
 				try {
@@ -258,7 +267,6 @@ var checkHeaders = function(data, meta){
 					return meta;
 				}
 			}
-			
 			return meta;
 		}
 	}
