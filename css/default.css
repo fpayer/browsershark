@@ -224,7 +224,7 @@
         padding:14px 20px;
         margin-top:30px; 
         margin-left:-160px;
-        width:240px; 
+        width:255px; 
         line-height:16px;
         border-radius:2px;
         -webkit-border-radius: 2px;
@@ -249,7 +249,7 @@
         position:absolute;
         border:0;
         top:-14px;
-        left:120px;
+        left:50%;
     }
     /* hex print */
 
@@ -275,11 +275,26 @@
         color: #000;
     }
 
-    .prettyprint .type {
+
+    .prettyprint .even {
         color: #080;
         font-weight: bold;
     }
-
+	
+	.prettyprint .odd {
+		color: #008;
+		font-weight: bold;
+	}
+	
+	.prettyprint .odd, .prettyprint .even {
+		background-color: #DDD;
+		border-radius: 5px;
+	}
+/*	
+	.prettyprint .tooltip:nth-child(even) {
+		background: red;
+	}
+*/
 	/*spandropdown*/
 	
 	.spandrop {
