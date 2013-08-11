@@ -117,6 +117,7 @@
 		border-color:#e2e2e2;
 		border-style:solid;
 		border-width:5px;
+        z-index: 1000;
 		-webkit-box-shadow:1px 1px 1px rgba(0,0,0,.3);
 		-webkit-border-radius: 5px;
 		-webkit-animation: showSidebar 1s; position:fixed;

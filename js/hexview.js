@@ -1,7 +1,7 @@
 var items = JSON.parse(localStorage.hexview);
 var view;
 var progress = [];
-var max = 1000;
+var max = 4096;
 	
 window.addEventListener("load", function(){
     $("#clear").on("click", function(){
@@ -45,6 +45,13 @@ var readField = function(bytes, start, stop){
     return bytes.substring(start,stop);
 }
 
+var dec2Bin = function(dec)
+{
+    var result = dec.toString(2);
+	result = Array(9-result.length).join("0")+result;
+	return result;
+}
+
 //Meta
 //[512,516,"FDFFFFFF", "MS Office file"]
 
@@ -67,13 +74,221 @@ var valuepair;
 
 var checkHeaders = function(data, meta){
 	var headerHandlers = {
-		"ico" : function(data, meta){
-			console.log("asd");
-			return meta;
+		"jpeg" : function(data, meta){
+			reader = getReader(data, 0, data.length);
+
+            var offset = 0;
+
+            var headerLength;
+            var headerType;
+            var app;
+			var marker;
+           
+            var appNames = {
+                "FFE0" : ["APP0", ""]
+            }
+			
+			var markerNames = {
+				"FFDB" : ["DQT", "Specifies one or more quantization tables"],
+				"FFC0" : ["SOFO", "Indicates that this is a baseline DCT-based JPEG, and specifies the width, height, number of components, and component subsampling"],
+			}
+
+            var apps = {
+                "FFE0" : function(){
+                    var length; 
+                    var marker;
+					
+                    var markers = {
+                        "JFIF" : function(){
+							var majorVersion;
+							var minorVersion;
+							var density;
+							var xdensity;
+							var ydensity;
+							var thumbWidth;
+							var thumbHeight;
+							var thumbData;
+							var densitys = {
+								"0" : "no units",
+								"1" : "pixels per inch",
+								"2" : "pixels per centimetre",
+							}
+							
+							majorVersion = reader.getInt8(offset);
+							meta.push([offset, offset, "Major version: " + majorVersion, "", "jpeg"]);
+							offset++;
+							
+							minorVersion = reader.getInt8(offset);
+							meta.push([offset, offset, "Minor version: " + minorVersion, "", "jpeg"]);
+							offset++;
+							
+							density = reader.getInt8(offset);
+							meta.push([offset, offset, "Density units: " + (densitys[density] || "unknown"), "", "jpeg"]);
+							offset++;
+							
+							xdensity = reader.getInt16(offset);
+							meta.push([offset, offset+1, "X density: " + xdensity, "Horizontal pixel density", "jpeg"]);
+							offset+=2;
+							
+							ydensity = reader.getInt16(offset);
+							meta.push([offset, offset+1, "Y density: " + ydensity, "Vertical pixel density", "jpeg"]);
+							offset+=2;
+							
+							thumbWidth = reader.getInt8(offset);
+							meta.push([offset, offset, "Thumbnail width: " + thumbWidth + "pixels", "", "jpeg"]);
+							offset++;
+							
+							thumbHeight = reader.getInt8(offset);
+							meta.push([offset, offset, "Thumbnail height: "  + thumbHeight + "pixels", "", "jpeg"]);
+							offset++;
+							
+							thumbData = reader.getBytes(3*thumbWidth*thumbHeight, offset);
+							meta.push([offset, offset+thumbData.length-1, "Thumbnail data: " + thumbData, "", "jpeg"]);
+							offset+=thumbData.length;
+							
+							
+                        }
+                    }        
+
+                    length = reader.getInt16(offset);
+                    meta.push([offset, offset+1, "Length of segment: " + length, "(Includes this field)", "jpeg"]);
+                    offset+=2;
+                    
+                    marker = reader.getString(4, offset);
+                    offset+=4;
+                    
+                    meta.push([offset, offset, "Null seperator", "", "jpeg"]);
+                    offset++;
+
+                    markers[marker]();
+                }
+            }
+			
+			var markers = {
+				"FFDB" : function(){
+					var length;
+					var precision;
+					var tableId;
+					var quantisation;
+					
+					var testByte;
+					
+					length = reader.getInt16(offset);
+                    meta.push([offset, offset+1, "Length of segment: " + length, "(Includes this field)", "jpeg"]);
+                    offset+=2;
+					
+					testByte = dec2Bin(reader.getBytes(1,offset)[0]);
+					percision = parseInt(testByte.substring(0, 4), 2);
+					tableId = parseInt(testByte.substring(4), 2);
+					meta.push([offset, offset, "Percision: " + percision, "Table id: " + tableId, "jpeg"]);
+					offset++;
+					
+					quantization = reader.getBytes(length-3, offset);
+					meta.push([offset, offset+quantization.length-1, "Quantization: " + toHex(quantization), "", "jpeg"]);
+					offset += quantization.length;
+				}, 
+				"FFC0" : function(){
+					var length;
+					var dataPercision;
+					var height;
+					var width;
+					var numComponent;
+					var componentId;
+					var samplingVert;
+					var samplingHor;
+					var tableNumber;
+					
+					var testByte;
+					
+					var numComponents = {
+						"1" : "grey scaled",
+						"3" : "color YCbCR or color YIQ",
+						"4" : "color CMYK",
+					}
+					
+					var componentIds = {
+						"1" : "Y",
+						"2" : "Cb",
+						"3" : "Cr",
+						"4" : "I",
+						"5" : "Q",
+					}
+					
+					length = reader.getInt16(offset);
+                    meta.push([offset, offset+1, "Length of segment: " + length, "(Does not include this field)", "jpeg"]);
+                    offset+=2;
+					
+					dataPercision = reader.getInt8(offset);
+					meta.push([offset, offset, "Data Percision: " + dataPercision + "bits/sample", "", "jpeg"]);
+					offset++;
+					
+					height = reader.getInt16(offset);
+					meta.push([offset, offset+1, "Height: " + height + "px", "", "jpeg"]);
+					offset+=2;
+					
+					width = reader.getInt16(offset);
+					meta.push([offset, offset+1, "Width: " + width + "px", "", "jpeg"]);
+					offset+=2;
+					
+					numComponent = reader.getInt8(offset);
+					meta.push([offset, offset, "Num components: " + numComponent, "This represents " + (numComponents[numComponent] || "unknown"), "jpeg"]);
+					offset++;
+					
+					for(var x=0;x<numComponent; x++){
+						componentId = reader.getInt8(offset);
+						meta.push([offset, offset, "Compontent id: " + componentId, "This represents: " + (componentIds[componentId] || "unknown"), "jpeg"]);
+						offset++;
+						
+						testByte = dec2Bin(reader.getBytes(1,offset)[0]);
+						samplingVert = parseInt(testByte.substring(0, 4), 2);
+						samplingHor = parseInt(testByte.substring(4), 2);
+						meta.push([offset, offset, "Sampling vertical: "+ samplingVert, "Sampling horizontal: " + samplingHor, "jpeg"]);
+						offset++;
+						
+						tableNumber = reader.getInt8(offset);
+						meta.push([offset, offset, "Table number: " + tableNumber, "", "jpeg"]);
+						offset++;
+					}
+				}
+			}
+
+            if(toHex(reader.getBytes(2,0)) != "FFD8"){return meta;}
+            meta.push([offset, offset+1, "Start Of Image", "", "jpeg"]);
+            offset+=2;
+
+            app = toHex(reader.getBytes(2, offset));
+            meta.push([offset, offset+1, "Application specific marker: " + appNames[app][0], appNames[app][1], "jpeg"]);
+            offset+=2;
+
+			//Application specific
+			if(typeof apps[app] == "undefined"){
+				console.log("App marker unsupported");
+			} else {
+				apps[app]();
+            }
+			
+			//Check what comes after and keep going until we cant find a marker
+			marker = reader.getBytes(2, offset)
+			for(; marker[0] == 255;marker = reader.getBytes(2, offset)){
+				marker = toHex(marker);
+				if(typeof markerNames[marker] == "undefined"){
+					console.log("Marker unsupported");
+					break;
+				}
+				
+				meta.push([offset, offset+1, markerNames[marker][0], markerNames[marker][1], "jpeg"]);
+				offset+=2;
+				markers[marker]();
+			}
+			
+            return meta;
 		},
 		"png" : function(data, meta){
 			reader = getReader(data, 0, data.length);
-			
+
+            //Not beginning
+            if(reader.getString(4,12) != "IHDR"){return meta;}
+
 			var byteCount = 0;
 			var offset = 0;
 			
@@ -99,7 +314,13 @@ var checkHeaders = function(data, meta){
 				"0" : "no interlace is used",
 				"1" : "Adam7 interlace is used",
 			}
-			
+
+            var checkSum = function(){
+	            crc = toHex(reader.getBytes(4, offset));
+				meta.push([offset, offset+3, "CRC: " + crc, "The CRC or Cyclic Redundancy Check for this header is " + crc, "png"]);
+				offset+=4;
+            }
+
 			//Handles required IHDR header
 			headerLength = reader.getInt32(8);
 			meta.push([8, 11, "Header length: " + headerLength, "The next " + headerLength + " succesive bytes are a header", "png"]);
@@ -150,11 +371,230 @@ var checkHeaders = function(data, meta){
 					
 					meta.push([offset, offset+value.length-1, "Value: " + value, "", "png"]);
 					offset+=value.length;
-					
-					crc = toHex(reader.getBytes(4, offset));
-					meta.push([offset, offset+3, "CRC: " + crc, "The CRC or Cyclic Redundancy Check for this header is " + crc, "png"]);
-					offset+=4;
 				},
+                "PLTE" : function(data, meta){
+                    var palette;
+                    var red;
+                    var green;
+                    var blue;
+                    var originalOffset = offset;
+                    
+                    while(offset < originalOffset+headerLength){
+                        palette = reader.getBytes(3, offset);
+                        red = palette[0];
+                        green = palette[1];
+                        blue = palette[2];
+
+                        meta.push([offset, offset+2, "Palette entry:", "red="+red+" green="+green+" blue="+blue, "png"]);
+                        offset+=3;
+                    }
+                },
+                "iCCP" : function(data, meta){
+                    console.log(offset);
+                    var profileName;
+                    //null seperator
+                    var compressionMethod;
+                    var compressedProfile;
+                    var originalOffset = offset;
+
+                    var compressionMethods = {
+                        "0" : "zlib"
+                    }
+
+                    var testBytes = reader.getBytes(headerLength, offset);
+                    for(var x = 0; x<testBytes.length;x++){
+                        if (testBytes[x] == 0){
+                            break;
+                        }
+                    }
+                    profileName = reader.getString(x, offset);
+                    meta.push([offset, offset+profileName.length-1, "Profile name: " + profileName, "", "png"]);
+                    offset+=profileName.length;
+
+                    meta.push([offset, offset, "Null seperator", "", "png"]);
+                    offset++;
+
+                    compressionMethod = reader.getInt8(offset);
+                    meta.push([offset, offset, "Compression method: " + compressionMethod, "This value represents a compresison method of " + (compressionMethods[compressionMethod] || "unknown"), "png"]);
+                    offset++;
+
+                    compressedProfile = reader.getString(headerLength-(offset-originalOffset), offset);
+                    meta.push([offset, offset+compressedProfile.length-1, "Compressed profile: " + compressedProfile, "", "png"]);
+                    offset+=compressedProfile.length;
+                },
+                "cHRM" : function(data, meta){
+                    var whitePointX;
+                    var whitePointY;
+                    var redX;
+                    var redY;
+                    var greenX;
+                    var greenY;
+                    var blueX;
+                    var blueY;
+
+                    whitePointX = reader.getInt32(offset);
+                    meta.push([offset, offset+3, "Chromaticities field", "White Point x: " + whitePointX/100000, "png"]);
+                    offset+=4;
+                    
+                    whitePointY = reader.getInt32(offset);
+                    meta.push([offset, offset+3, "Chromaticities field", "White Point y: " + whitePointY/100000, "png"]);
+                    offset+=4
+
+                    redX = reader.getInt32(offset);
+                    meta.push([offset, offset+3, "Chromaticities field", "Red x: " + redX/100000, "png"]);
+                    offset+=4;
+
+                    redY = reader.getInt32(offset);
+                    meta.push([offset, offset+3, "Chromaticities field", "Red y: " + redY/100000, "png"]);
+                    offset+=4;
+
+                    greenX = reader.getInt32(offset);
+                    meta.push([offset, offset+3, "Chromaticities field", "Green x: " + greenX/100000, "png"]);
+                    offset+=4;
+
+                    greenY = reader.getInt32(offset);
+                    meta.push([offset, offset+3, "Chromaticities field", "Green y: " + greenY/100000, "png"]);
+                    offset+=4;
+
+                    blueX = reader.getInt32(offset);
+                    meta.push([offset, offset+3, "Chromaticities field", "Blue x: " + blueX/100000, "png"]);
+                    offset+=4;
+
+                    blueY = reader.getInt32(offset);
+                    meta.push([offset, offset+3, "Chromaticities field", "Blue y: " + blueY/100000, "png"]);
+                    offset+=4;
+                },
+                "sRGB" : function(data, meta){
+                    var rgb;
+
+                    var rgbs = {
+                        "0" : "Perceptual",
+                        "1" : "Relative colorimetric",
+                        "2" : "Saturation",
+                        "3" : "Absolute colorimetric",
+                    }
+
+                    rgb = reader.getBytes(1, offset)[0];
+                    meta.push([offset, offset, "Rendering intent: " + rgbs[rgb], "", "png"]);
+                    offset++;
+                },
+                "gAMA" : function(data, meta){
+                    var gamma;
+
+                    gamma = reader.getBytes(4, offset);
+                    meta.push([offset, offset+3, "Gamma value: " + gamma[0] + " " + gamma[1] + " " + gamma[2] + " " + gamma[3], "", "png"]);
+                    offset+=4;
+                },
+                "vpAg" : function(data, meta){
+                    var virtualImageWidth;
+                    var virtualImageHeight;
+                    var unit;
+
+                    var units = {
+                        "0" : "pixels"
+                    }
+
+                    virtualImageWidth = reader.getInt32(offset);
+                    meta.push([offset, offset+3, "Virtual image width: " + virtualImageWidth, "", "png"]);
+                    offset+=4;
+                    
+                    virtualImageHeight = reader.getInt32(offset);
+                    meta.push([offset, offset+3, "Virtual image height: " + virtualImageWidth, "", "png"]);
+                    offset+=4;
+                    
+                    unit = reader.getBytes(1, offset)[0];
+                    meta.push([offset, offset, "Unit specifier: " + (units[unit] || "unknown"), "", "pmg"]);
+                    offset+=1;
+                },
+               "oFFs" : function(data, meta){
+                    var px;
+                    var py;
+                    var unit;
+
+                    var units = {
+                        "0" : "pixels",
+                        "1" : "microns",
+                    }
+
+                    px = reader.getInt32(offset);
+                    meta.push([offset, offset+3, "Image position x-axis: " + px, "", "png"]);
+                    offset+=4;
+                    
+                    py = reader.getInt32(offset);
+                    meta.push([offset, offset+3, "Image position y-axis: " + py, "", "png"]);
+                    offset+=4;
+                    
+                    unit = reader.getBytes(1, offset)[0];
+                    meta.push([offset, offset, "Unit specifier: " + (units[unit] || "unknown"), "", "pmg"]);
+                    offset+=1;
+                },
+                "pHYs" : function(data, meta){
+                    var ppx;
+                    var ppy;
+                    var unit;
+
+                    var units = {
+                        "0" : "unknown",
+                        "1" : "meters",
+                    }
+
+                    ppx = reader.getInt32(offset);
+                    meta.push([offset, offset+3, "Pixels per unit x-axis: " + ppx, "", "png"]);
+                    offset+=4;
+                    
+                    ppy = reader.getInt32(offset);
+                    meta.push([offset, offset+3, "Pixels per unit y-axis: " + ppy, "", "png"]);
+                    offset+=4;
+                    
+                    unit = reader.getBytes(1, offset)[0];
+                    meta.push([offset, offset, "Unit specifier: " + (units[unit] || "unknown"), "", "pmg"]);
+                    offset+=1;
+                },
+                "tRNS" : function(data, meta){
+                    var gray;
+                    var alpha;
+                    var trueColor;
+                    var red;
+                    var green;
+                    var blue;
+                    var originalOffset = offset;
+
+                    if (colorType == 0){
+                        console.log("untested");
+                        
+                        gray = reader.getBytes(2,offset)[0] + " " + reader.getBytes(2,offset)[1];
+                        meta.push([offset, offset+1, "Grayscale level: " + gray, "", "png"]);
+                        offset+=2;
+                    } else if (colorType == 3) {
+                        var x = 0;
+                        while(offset < originalOffset+headerLength){
+                            alpha = reader.getBytes(1, offset)[0];
+                            meta.push([offset, offset, "Transparency for palette: " + x, "Alpha: " + alpha, "png"]);
+                            offset++;
+                            x++;
+                        }
+                    } else if (colorType == 2) {
+                        console.log("untested");
+                        
+                        trueColor = reader.getBytes(3, offset);
+                        red = trueColor[0];
+                        green = trueColor[1];
+                        blue = trueColor[2];
+
+                        meta.push([offset, offset, "Truecolor entry: ", "red="+red, "png"]);
+                        offset++;
+                        
+                        meta.push([offset, offset, "Truecolor entry: ", "green="+green, "png"]);
+                        offset++;
+
+                        meta.push([offset, offset, "Truecolor entry: ", "blue="+blue, "png"]);
+                        offset++;
+                    } else {
+                        console.log("untested");
+                        meta.push([offset, offset+headerLength-1, "Transparancy type not supported with this color type", "", "png"]);
+                        //not supported
+                    }
+                },
 				"iTXt" : function(data, meta){
 					var valuepair;
 					//null seperator
@@ -173,7 +613,7 @@ var checkHeaders = function(data, meta){
 						"1" : "compressed text"
 					}
 					
-					var testBytes = view.getBytes(headerLength, offset);
+					var testBytes = reader.getBytes(headerLength, offset);
 					for(var x = 0; x<testBytes.length;x++){
 						if (testBytes[x] == 0){
 							break;
@@ -194,7 +634,7 @@ var checkHeaders = function(data, meta){
 					meta.push([offset, offset, "Compression method: " + compressionMethod, "This header currently only supports the compression method 0 which is zlib or none", "png"]);
 					offset++;
 					
-					testBytes = view.getBytes(headerLength, offset);
+					testBytes = reader.getBytes(headerLength, offset);
 					for(var x = 0; x<testBytes.length;x++){
 						if (testBytes[x] == 0){
 							break;
@@ -209,7 +649,7 @@ var checkHeaders = function(data, meta){
 					meta.push([offset, offset, "Null Seperator", "A null seperator", "png"]);
 					offset++;
 					
-					testBytes = view.getBytes(headerLength, offset);
+					testBytes = reader.getBytes(headerLength, offset);
 					for(var x = 0; x<testBytes.length;x++){
 						if (testBytes[x] == 0){
 							break;
@@ -223,26 +663,17 @@ var checkHeaders = function(data, meta){
 					
 					meta.push([offset, offset, "Null Seperator", "A null seperator", "png"]);
 					offset++;
-					
-					text = view.getString(headerLength-(offset-originalOffset), offset);
-					console.log(text);
-					meta.push([offset, offset+text.length-1, "Text: " + text, "", "png"]);
-					offset+=text.length;
-					
-					crc = toHex(reader.getBytes(4, offset));
-					meta.push([offset, offset+3, "CRC: " + crc, "The CRC or Cyclic Redundancy Check for this header is " + crc, "png"]);
-					offset+=4;
-				},
+				
+					text = reader.getString(headerLength-(offset-originalOffset), offset);
+                    meta.push([offset, offset+text.length-1, "Text: " + text, "", "png"]);
+                    offset+=text.length;
+                },
 				"sBIT" : function(data, meta){
 					var sBit;
 				
 					sBit = reader.getInt32(headerLength);
 					meta.push([offset, offset+headerLength-1, "sBit value: " + sBit, "This means that " + sBit + " bits were significant in the source data", "png"]);
 					offset+=headerLength;
-					
-					crc = toHex(reader.getBytes(4, offset));
-					meta.push([offset, offset+3, "CRC: " + crc, "The CRC or Cyclic Redundancy Check for this header is " + crc, "png"]);
-					offset+=4;
 				}
 			}
 			offset = 33;
@@ -250,19 +681,24 @@ var checkHeaders = function(data, meta){
 			{
 				try {
 					//Handles next chunk
-
 					headerLength = reader.getInt32(offset);
-					meta.push([offset, offset+3, "Header length: " + headerLength, "The next " + headerLength + " successive bytes are a header", "png"]);
+					meta.push([offset, offset+3, "Header length: " + headerLength, "The next " + headerLength + " successive bytes following the headername are a header", "png"]);
 					offset+=4;
 					
 					headerType = reader.getString(4,offset);
 					meta.push([offset, offset+3, "Header type: " + headerType, "This is the " + headerType + " header", "png"]);
 					offset+=4;
-				
-					//console.log(offset);
+			        
+                    if(headerType == "IDAT"){return meta;}
 
-					headerTypes[headerType](data, meta);
-					
+                    if (typeof headerTypes[headerType] == "undefined"){
+						console.log("Unknown header");
+                        meta.push([offset, offset+headerLength-1, "Unknown header", "", "png"]);
+                        offset+=headerLength;
+                    } else {
+					    headerTypes[headerType](data, meta);
+				    }
+                    checkSum();
 				} catch (err) {
 					return meta;
 				}
@@ -280,39 +716,39 @@ var checkHeaders = function(data, meta){
 var checkFiletype = function(data, meta){
     //In HEX
     var fileTypes = [
-		[0, 4, "25504446", "pdf"], //pdf
-        [0, 4, "774F4646", "woff"], //woff
-        [0,3,"494433", "mp3"], //mp3 id3v2
-        [0,2,"FFFB", "mp3"], //mp3 id3v1 or no id3
-        [4,8,"66747970", "mp4"], //mp4
+		[0, 3, "25504446", "pdf"], //pdf
+        [0, 3, "774F4646", "woff"], //woff
+        [0, 2,"494433", "mp3"], //mp3 id3v2
+        [0, 1,"FFFB", "mp3"], //mp3 id3v1 or no id3
+        [4, 7,"66747970", "mp4"], //mp4
         //[0,6,"FDFDFD", "mp3"],
-        [0, 8, "504B030414000600", "docx/pptx/xlsx"], // DOCX, PPTX XLSX
-        [0, 6, "504B03041400", "zip"], //zip <FUCK theres like 12+ filetypes for this shit 
-        [0,2,"4D5A", "exe/com/dll"],//com,dll,drv,eve,pif,qts,qtx,sys
-        [0,3, "1F8B08", "gz"], //gz, tgz
-        [0, 7, "526172211A0700", "rar"], //rar v1.5+
-        [0, 8, "526172211A070100", "rar"], //rar v5.0+
-        [0,4, "38425053", "psd"], //psd
-        [0,4, "7F454C46", "elf"], //elf UNTESTED
+        [0, 7, "504B030414000600", "docx/pptx/xlsx"], // DOCX, PPTX XLSX
+        [0, 5, "504B03041400", "zip"], //zip <FUCK theres like 12+ filetypes for this shit 
+        [0, 1,"4D5A", "exe/com/dll"],//com,dll,drv,eve,pif,qts,qtx,sys
+        [0, 2, "1F8B08", "gz"], //gz, tgz
+        [0, 6, "526172211A0700", "rar"], //rar v1.5+
+        [0, 7, "526172211A070100", "rar"], //rar v5.0+
+        [0, 3, "38425053", "psd"], //psd
+        [0, 3, "7F454C46", "elf"], //elf UNTESTED
         //[0,10, "4344303031", "iso"], //iso UNTESTED
-        [0,4, "CAFEBABE", "class"], //class (java)
-        [0, 6, "377ABCAF271C", "7z"], //7z
-        [0, 3, "EB3C90", "img"], //img gem raster file?
-        [0,2, "424D", "bmp"], //bmp
-        [0,4, "EDABEEDB", "rpm"], //rpm
-        [0,4, "4F676753", "ogg"], //ogg
-        [0,3, "425A68", "bz2"], //bz2,tar.bz2,tbz2,tb2
-        [0, 8, "D0CF11E0A1B11AE1", "doc/dot/ppt/xls"], //doc, dot, pps, ppt, xla, xls, wiz
-        [0, 4, "00000100", "ico"], //ico
-		[0, 4, "00000200", "cur"], //cur
-        [6,10,"4A464946", "jpeg"], //Jpeg jfif [FFD8FFE0 xxxx]
-		[6,11, "4578696600", "jpeg"], //jpeg exif [FFD8FFE1 xxxx]
-		[6,12, "535049464600", "jpeg"], //jpeg spiff UNTESTED [FFD8FFE8 xxxx]
+        [0, 3, "CAFEBABE", "class"], //class (java)
+        [0, 5, "377ABCAF271C", "7z"], //7z
+        [0, 2, "EB3C90", "img"], //img gem raster file?
+        [0, 1, "424D", "bmp"], //bmp
+        [0, 3, "EDABEEDB", "rpm"], //rpm
+        [0, 3, "4F676753", "ogg"], //ogg
+        [0, 2, "425A68", "bz2"], //bz2,tar.bz2,tbz2,tb2
+        [0, 7, "D0CF11E0A1B11AE1", "doc/dot/ppt/xls"], //doc, dot, pps, ppt, xla, xls, wiz
+        [0, 3, "00000100", "ico"], //ico
+		[0, 3, "00000200", "cur"], //cur
+        [6, 9,"4A464946", "jpeg"], //Jpeg jfif [FFD8FFE0 xxxx]
+		[6, 10, "4578696600", "jpeg"], //jpeg exif [FFD8FFE1 xxxx]
+		[6, 11, "535049464600", "jpeg"], //jpeg spiff UNTESTED [FFD8FFE8 xxxx]
         [0, 7,"89504E470D0A1A0A", "png"], //Png
-        [0,3,"435753", "swf"], //Shockwave flash
-        [0,14,"3C3F786D6C2076657273696F6E3D", "xml"], //XML Manifest
-        [0,6,"474946383761", "gif"], //GIF87a
-        [0,6,"474946383961", "gif"] //GIF89a
+        [0, 2,"435753", "swf"], //Shockwave flash
+        [0, 13,"3C3F786D6C2076657273696F6E3D", "xml"], //XML Manifest
+        [0, 5,"474946383761", "gif"], //GIF87a
+        [0, 5,"474946383961", "gif"] //GIF89a
     ];
     
 	//console.log("This field is:", getBytes(data, 0, 1));
@@ -322,13 +758,13 @@ var checkFiletype = function(data, meta){
 		var start = fileTypes[x][0];
 		var end = fileTypes[x][1];
 		
-		var hstart = fileTypes[x][0]*2;
-		var hend = fileTypes[x][1]*2+1;
-		var hex = getHex(data, hstart, hend-hstart);
-		//console.log("This field is:", readField(bytes, 12, 22));
+		var hstart = fileTypes[x][0];
+		var hend = fileTypes[x][1];
+		var hex = getHex(data, hstart, hend-hstart+1); //You need the +1 for some reason. I forget why
+        //console.log("This field is:", readField(bytes, 12, 22));
 		//console.log("This field is:", view.getString(20, 0));
 		if (checkConstant(hex, 0, hex.length, fileTypes[x][2])){
-			meta.push([start, end, "Content-Type: " + fileTypes[x][3], "Filetype determined with presence of the signature: <b>" + fileTypes[x][2] + "</b>", fileTypes[x][3]]);
+			meta.push([start, end, "Content-Type: " + fileTypes[x][3], "Filetype determined with presence of the signature: " + fileTypes[x][2], fileTypes[x][3]]);
 		}
 	}
     return meta;
@@ -340,8 +776,8 @@ var addHex = function(id){
 	var offset = progress[id].offset;
 	var completed = progress[id].completed;
 
-	//Retrieve meta
-	var meta = getMeta(data);
+	//Retrieve meta and restrict search to this chunk
+	var meta = getMeta(data.substring(offset, offset+max));
 	
 	//Retrieve hex
 	var hex = getHex(data, offset, max);
@@ -359,7 +795,7 @@ var addHex = function(id){
 	//Create hexdump
 	var metas = [];
 	for (var x=0;x<meta.length;x++){
-		var start = meta[x][0]*2; //Conver to hex offset
+		var start = meta[x][0]*2; //Convert to hex offset
 		var stop = meta[x][1]*2+1;
 		var title = meta[x][2];
 		var desc = meta[x][3];
@@ -370,7 +806,7 @@ var addHex = function(id){
 		var metaSpan = $("<span>").addClass(classes);
 		metas.push([start, stop, title, desc, metaSpan]);
 	}
-	
+
 	var plain = $("<span>").addClass("pln");
 	//Loop through all hex
 	for (var x=0;x<hex.length;x++){
@@ -383,7 +819,9 @@ var addHex = function(id){
 			var desc = metas[y][3];
 			//If within meta range
 			if(x+offset >= start && x+offset <= end){
-				foundMeta= true;
+				if(offset==1000){
+                }
+                foundMeta= true;
 				var metaSpan = metas[y][4];
 				
 				//If 4th and last
@@ -404,6 +842,9 @@ var addHex = function(id){
 					img.attr("src", "/images/callout.gif");
 					img.addClass("callout");
 					
+                    title = title.length>250?title.substring(0,250)+"...":title;
+                    desc = desc.length>250?desc.substring(0,250)+"...":desc;
+
 					var t = $("<p>");
 					t.text(title);
 					tooltip.prepend(t);
