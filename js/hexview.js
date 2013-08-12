@@ -111,9 +111,6 @@ var checkHeaders = function(data, meta){
 							offset+=6;
 							
 							dataLength = length - 2 -6; //Length - Length field - App header
-							
-							console.log(offset);
-							
 							data = toHex(reader.getBytes(dataLength, offset));
 							meta.push([offset, offset+dataLength-1, "Data: " + data, "", "jpeg"]);
 							offset+=dataLength;
