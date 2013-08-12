@@ -85,16 +85,82 @@ var checkHeaders = function(data, meta){
 			var marker;
            
             var appNames = {
-                "FFE0" : ["APP0", ""]
+                "FFE0" : ["APP0", ""],
+				"FFEC" : ["APP12", ""],
+				"FFEE" : ["APP14", ""],
             }
 			
 			var markerNames = {
-				"FFDB" : ["DQT", "Specifies one or more quantization tables"],
-				"FFC0" : ["SOFO", "Indicates that this is a baseline DCT-based JPEG, and specifies the width, height, number of components, and component subsampling"],
+				"FFDB" : ["DQT", "Define Quantization Table(s). Specifies one or more quantization tables"],
+				"FFC0" : ["SOF0", "Start Of Frame. Indicates that this is a baseline DCT-based JPEG, and specifies the width, height, number of components, and component subsampling"],
+				"FFC4" : ["DHT", "Define Huffman Table(s). Specifies one or more Huffman tables"],
+				"FFDA" : ["SOS", "Start of scan. Begins a top-to-bottom scan of the image. In baseline DCT JPEG images, there is generally a single scan. Progressive DCT JPEG images usually contain multiple scans"],
+				"FFFE" : ["COM", "Comment. Contains a text comment"],
 			}
 
             var apps = {
+				"FFEE" : function(){
+					var length;
+					
+					var markers = {
+						"Adobe" : function() {
+							var data;
+							var dataLength;
+							
+							meta.push([offset, offset+5, "Application tag: Adobe", "", "jpeg"]); //Adobe+null byte
+							offset+=6;
+							
+							dataLength = length - 2 -6; //Length - Length field - App header
+							
+							console.log(offset);
+							
+							data = toHex(reader.getBytes(dataLength, offset));
+							meta.push([offset, offset+dataLength-1, "Data: " + data, "", "jpeg"]);
+							offset+=dataLength;
+						}
+					}
+					
+					length = reader.getInt16(offset);
+                    meta.push([offset, offset+1, "Length of segment: " + length, "(Includes this field)", "jpeg"]);
+                    offset+=2;
+					
+					if(reader.getString(5,offset) == "Adobe"){markers["Adobe"]()};
+				},
+				"FFEC" : function(){
+					var length;
+					
+					var markers = {
+						"Ducky" : function(){
+							//http://blog.bfitz.us/?p=289
+							var quality;
+							var comment;
+							
+							var x=2;
+						
+							meta.push([offset, offset+5, "Application tag: Ducky", "", "jpeg"]); //Ducky+null byte
+							offset+=6;
+							x+=6;
+							
+							quality = view.getInt32(offset);
+							meta.push([offset, offset+3, "Quality: " +quality, "", "jpeg"]);
+							offset+=4;
+							x+=4;
+							
+							comment = view.getString(length-x, offset);
+							meta.push([offset, offset+comment.length-1, "Comment/Copyright: " + comment, "", "jpeg"]);
+							offset+=comment.length;
+							
+						}
+					}
+					
+					length = reader.getInt16(offset);
+                    meta.push([offset, offset+1, "Length of segment: " + length, "(Includes this field)", "jpeg"]);
+                    offset+=2;
+                    
+					if(reader.getString(5,offset) == "Ducky"){markers["Ducky"]()};
+				},
                 "FFE0" : function(){
+					//http://en.wikipedia.org/wiki/JPEG_File_Interchange_Format
                     var length; 
                     var marker;
 					
@@ -145,8 +211,6 @@ var checkHeaders = function(data, meta){
 							thumbData = reader.getBytes(3*thumbWidth*thumbHeight, offset);
 							meta.push([offset, offset+thumbData.length-1, "Thumbnail data: " + thumbData, "", "jpeg"]);
 							offset+=thumbData.length;
-							
-							
                         }
                     }        
 
@@ -165,7 +229,23 @@ var checkHeaders = function(data, meta){
             }
 			
 			var markers = {
+				"FFFE" : function(){
+					//COM
+					//http://www.videotechnology.com/jpeg/j1.html
+					
+					var length;
+					var comment;
+					
+					length = reader.getInt16(offset);
+                    meta.push([offset, offset+1, "Length of segment: " + length, "(Includes this field)", "jpeg"]);
+                    offset+=2;
+					
+					comment = reader.getString(length-2, offset);
+					meta.push([offset, offset+comment.length-1, "Comment: " + comment, "", "jpeg"]);
+					offset+=comment.length;
+				},
 				"FFDB" : function(){
+					//DQT
 					var length;
 					var precision;
 					var tableId;
@@ -187,7 +267,94 @@ var checkHeaders = function(data, meta){
 					meta.push([offset, offset+quantization.length-1, "Quantization: " + toHex(quantization), "", "jpeg"]);
 					offset += quantization.length;
 				}, 
+				"FFDA" : function() {
+					//SOS
+					var length;
+					var numComponents;
+					var componentId;
+					var ac;
+					var dc;
+					
+					var testByte;
+					
+					var componentIds = {
+						"1" : "Y",
+						"2" : "Cb",
+						"3" : "Cr", 
+						"4" : "I",
+						"5" : "Q",
+					}
+
+					length = reader.getInt16(offset);
+                    meta.push([offset, offset+1, "Length of segment: " + length, "(Includes this field)", "jpeg"]);
+                    offset+=2;
+					
+					numComponents = reader.getInt8(offset);
+					meta.push([offset, offset, "Number of components: " + numComponents, "", "jpeg"]);
+					offset++;
+					
+					for(var x=0;x<numComponents;x++){
+						componentId = reader.getInt8(offset);
+						meta.push([offset, offset, "Component Id: " + componentId, "This represents: " + componentIds[componentId], "jpeg"]);
+						offset++;
+						
+						testByte = dec2Bin(reader.getBytes(1,offset)[0]);
+						ac = parseInt(testByte.substring(0, 4), 2);
+						dc = parseInt(testByte.substring(4), 2);
+						meta.push([offset, offset, "AC table: " + ac, "DC table: " + dc, "jpeg"]);
+						offset++;
+												
+					}
+					meta.push([offset, offset+2, "Closing marker", "Raw data follows", "jpeg"]);
+					offset+=3;
+				},
+				"FFC4" : function() {
+					//DHT
+					var length;
+					var num;
+					var type;
+					var numSymbols;
+					var bytes;
+					var codesLength;
+					var valueCode;
+					
+					var testByte;
+					
+					var types = {
+						"0" : "DC table",
+						"1" : "AC table",
+					}
+					
+					length = reader.getInt16(offset);
+                    meta.push([offset, offset+1, "Length of segment: " + length, "(Includes this field)", "jpeg"]);
+                    offset+=2;
+					length-=2; //Remove length of length field
+					
+					var unknown;
+					unknown = toHex(reader.getBytes(length, offset));
+					meta.push([offset, offset+length-1, "Huffman data: " + unknown, "", "jpeg"]);
+					offset+=length;
+					
+					/* Who the fuck knows?
+					for(var x = 0; x<length;x+=3){
+						testByte = dec2Bin(reader.getBytes(1,offset)[0]);
+						num = parseInt(testByte.substring(0, 3), 2);
+						type = parseInt(testByte.substring(4,5), 2);
+						meta.push([offset, offset, "Table index: " + num, "Type of table: " + type + " which represents " + (types[type] || "unknown"), "jpeg"]);
+						offset++;
+					
+						codesLength = reader.getInt8(offset);
+						meta.push([offset, offset, "Codes length: " + codesLength, "Number of Huffman codes", "jpeg"]);
+						offset++;
+						
+						valueCode = reader.getInt8(offset);
+						meta.push([offset, offset, "Associated value: " + valueCode, "Value associated with each Huffman code", "jpeg"]);
+						offset++;
+					}
+					*/
+				},
 				"FFC0" : function(){
+					//SOF0
 					var length;
 					var dataPercision;
 					var height;
@@ -242,7 +409,7 @@ var checkHeaders = function(data, meta){
 						testByte = dec2Bin(reader.getBytes(1,offset)[0]);
 						samplingVert = parseInt(testByte.substring(0, 4), 2);
 						samplingHor = parseInt(testByte.substring(4), 2);
-						meta.push([offset, offset, "Sampling vertical: "+ samplingVert, "Sampling horizontal: " + samplingHor, "jpeg"]);
+						meta.push([offset, offset, "Sampling factors vertical: "+ samplingVert, "Sampling factors horizontal: " + samplingHor, "jpeg"]);
 						offset++;
 						
 						tableNumber = reader.getInt8(offset);
@@ -256,29 +423,25 @@ var checkHeaders = function(data, meta){
             meta.push([offset, offset+1, "Start Of Image", "", "jpeg"]);
             offset+=2;
 
-            app = toHex(reader.getBytes(2, offset));
-            meta.push([offset, offset+1, "Application specific marker: " + appNames[app][0], appNames[app][1], "jpeg"]);
-            offset+=2;
-
-			//Application specific
-			if(typeof apps[app] == "undefined"){
-				console.log("App marker unsupported");
-			} else {
-				apps[app]();
-            }
 			
 			//Check what comes after and keep going until we cant find a marker
 			marker = reader.getBytes(2, offset)
 			for(; marker[0] == 255;marker = reader.getBytes(2, offset)){
 				marker = toHex(marker);
 				if(typeof markerNames[marker] == "undefined"){
-					console.log("Marker unsupported");
-					break;
+					if(typeof apps[marker] == "undefined"){
+						console.log("Marker unsupported");
+						break;
+					} else {
+						meta.push([offset, offset+1, "Application specific marker: " + appNames[marker][0], appNames[marker][1], "jpeg"]);
+						offset+=2;
+						apps[marker]();
+					}
+				} else {
+					meta.push([offset, offset+1, markerNames[marker][0], markerNames[marker][1], "jpeg"]);
+					offset+=2;
+					markers[marker]();
 				}
-				
-				meta.push([offset, offset+1, markerNames[marker][0], markerNames[marker][1], "jpeg"]);
-				offset+=2;
-				markers[marker]();
 			}
 			
             return meta;
